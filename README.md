@@ -290,4 +290,5 @@ For issues and questions:
 
 ---
 
-**🎉 Congratulations! You have successfully implemented a complete FPGA-based EEG classification system from raw data to hardware implementation!**
+
+**simuator/sleep-edf-database-1.0.0.zip file is not pushed in the Github. It is a database and to run the application succesfully, you must have to create a folder simuator/sleep-edf-database-1.0.0.zip. Available in PC.**
