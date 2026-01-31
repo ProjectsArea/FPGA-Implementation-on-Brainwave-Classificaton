@@ -291,4 +291,5 @@ For issues and questions:
 ---
 
 
-**simuator/sleep-edf-database-1.0.0.zip file is not pushed in the Github. It is a database and to run the application succesfully, you must have to create a folder simuator/sleep-edf-database-1.0.0.zip. Available in PC.**
+**simuator/sleep-edf-database-1.0.0.zip file is not pushed in the Github. It is a dataset and to run the application succesfully, you must have to create a folder simuator/sleep-edf-database-1.0.0.zip. You can get the dataset --> "https://www.physionet.org/content/sleep-edf/get-zip/1.0.0/".**
+
