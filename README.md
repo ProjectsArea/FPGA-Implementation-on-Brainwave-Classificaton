@@ -248,7 +248,7 @@ FPGA_ANN/
 │   │   ├── landing.html    # Landing page
 │   │   ├── predict.html    # Prediction interface
 │   │   └── simulator.html  # Data visualization
-│   └── static/             # CSS/JS assets
+│   └── static/             # CSS/JS assets (currently empty, if this folder asks to render just create an empty folder)
 ├── verilog/                # FPGA design files
 │   ├── design.sv          # Main design (EDA Playground)
 │   ├── testbench.sv       # Test suite (EDA Playground)
@@ -292,4 +292,5 @@ For issues and questions:
 
 
 **simuator/sleep-edf-database-1.0.0.zip file is not pushed in the Github. It is a dataset and to run the application succesfully, you must have to create a folder simuator/sleep-edf-database-1.0.0.zip. You can get the dataset --> "https://www.physionet.org/content/sleep-edf/get-zip/1.0.0/".**
+
 
