@@ -1,0 +1,665 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Simulator Dashboard - FPGA ANN Sleep Stage Detection</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        :root {
+            --primary-color: #2c3e50;
+            --secondary-color: #3498db;
+            --accent-color: #e74c3c;
+            --success-color: #27ae60;
+            --warning-color: #f39c12;
+            --info-color: #8e44ad;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding-top: 80px;
+        }
+
+        .navbar {
+            background: rgba(255, 255, 255, 0.95) !important;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 2px 20px rgba(0,0,0,0.1);
+        }
+
+        .navbar-brand {
+            font-weight: bold;
+            color: var(--primary-color) !important;
+        }
+
+        .main-container {
+            padding: 40px 0;
+        }
+
+        .dashboard-card {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.1);
+            margin-bottom: 30px;
+            transition: transform 0.3s ease;
+        }
+
+        .dashboard-card:hover {
+            transform: translateY(-5px);
+        }
+
+        .status-card {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            padding: 25px;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.1);
+            margin-bottom: 30px;
+            text-align: center;
+        }
+
+        .status-no-data {
+            background: linear-gradient(135deg, #fff3cd, #ffeaa7);
+            color: #856404;
+        }
+
+        .status-has-data {
+            background: linear-gradient(135deg, #d4edda, #55efc4);
+            color: #155724;
+        }
+
+        .feature-table {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 15px;
+            overflow: hidden;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+        }
+
+        .feature-table th {
+            background: linear-gradient(45deg, var(--secondary-color), #5dade2);
+            color: white;
+            border: none;
+            padding: 15px;
+            font-weight: 600;
+        }
+
+        .feature-table td {
+            padding: 12px 15px;
+            vertical-align: middle;
+            border-bottom: 1px solid #e9ecef;
+        }
+
+        .feature-table tbody tr:hover {
+            background-color: rgba(52, 152, 219, 0.05);
+        }
+
+        .feature-value {
+            font-family: 'Courier New', monospace;
+            font-weight: bold;
+            color: var(--secondary-color);
+        }
+
+        .quantized-value {
+            font-family: 'Courier New', monospace;
+            font-weight: bold;
+            color: var(--info-color);
+        }
+
+        .btn-control {
+            padding: 10px 25px;
+            border-radius: 50px;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            margin: 5px;
+        }
+
+        .btn-refresh {
+            background: linear-gradient(45deg, var(--secondary-color), #5dade2);
+            border: none;
+            color: white;
+        }
+
+        .btn-refresh:hover {
+            background: linear-gradient(45deg, #2980b9, var(--secondary-color));
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(52, 152, 219, 0.3);
+        }
+
+        .btn-auto-refresh {
+            background: linear-gradient(45deg, var(--success-color), #52c77e);
+            border: none;
+            color: white;
+        }
+
+        .btn-auto-refresh:hover {
+            background: linear-gradient(45deg, #229954, var(--success-color));
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(39, 174, 96, 0.3);
+        }
+
+        .btn-auto-refresh.active {
+            background: linear-gradient(45deg, var(--accent-color), #ec7063);
+        }
+
+        .chart-container {
+            position: relative;
+            height: 300px;
+            margin-top: 20px;
+        }
+
+        .stat-box {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 15px;
+            padding: 20px;
+            text-align: center;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .stat-value {
+            font-size: 2rem;
+            font-weight: bold;
+            color: var(--secondary-color);
+        }
+
+        .stat-label {
+            color: #666;
+            font-size: 0.9rem;
+            margin-top: 5px;
+        }
+
+        .timestamp {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            padding: 10px 20px;
+            display: inline-block;
+            margin: 10px 0;
+            backdrop-filter: blur(10px);
+        }
+
+        .feature-badge {
+            display: inline-block;
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 500;
+            margin: 2px;
+        }
+
+        .badge-delta { background: #3498db; color: white; }
+        .badge-theta { background: #9b59b6; color: white; }
+        .badge-alpha { background: #e74c3c; color: white; }
+        .badge-beta { background: #f39c12; color: white; }
+        .badge-statistical { background: #27ae60; color: white; }
+
+        .pulse {
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+
+        .fade-in {
+            animation: fadeIn 0.5s ease-in;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+        }
+
+        .info-panel {
+            background: linear-gradient(135deg, #f8f9fa, #e9ecef);
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 20px;
+            border-left: 5px solid var(--info-color);
+        }
+    </style>
+</head>
+<body>
+    <!-- Loading Overlay -->
+    <div class="loading-overlay" id="loadingOverlay">
+        <div class="text-center text-white">
+            <div class="spinner-border mb-3" style="width: 3rem; height: 3rem;"></div>
+            <p>Loading simulator data...</p>
+        </div>
+    </div>
+
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-light fixed-top">
+        <div class="container">
+            <a class="navbar-brand" href="/">
+                <i class="bi bi-cpu"></i> FPGA ANN
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="/">Home</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/predict">Prediction</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link active" href="/simulator">Simulator</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <div class="container main-container">
+        <div class="row">
+            <div class="col-lg-12">
+                <div class="text-center mb-5">
+                    <h1 class="text-white mb-3">
+                        <i class="bi bi-gear-wide-connected"></i> Live Simulator Dashboard
+                    </h1>
+                    <p class="text-white-50">Monitor input features being fed to the FPGA ANN in real-time</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Status Card -->
+        <div class="row">
+            <div class="col-lg-12">
+                <div id="statusCard" class="status-card status-no-data">
+                    <i class="bi bi-exclamation-triangle display-4 mb-3"></i>
+                    <h4>No prediction data available</h4>
+                    <p>Run a prediction first to see the input features</p>
+                    <div class="timestamp" id="timestamp" style="display: none;"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Control Panel -->
+        <div class="row">
+            <div class="col-lg-12">
+                <div class="dashboard-card">
+                    <h4 class="mb-4">
+                        <i class="bi bi-sliders"></i> Control Panel
+                    </h4>
+                    <div class="row align-items-center">
+                        <div class="col-md-8">
+                            <div class="btn-group" role="group">
+                                <button class="btn btn-control btn-refresh" onclick="refreshData()">
+                                    <i class="bi bi-arrow-clockwise"></i> Refresh Now
+                                </button>
+                                <button class="btn btn-control btn-auto-refresh" id="autoRefreshBtn" onclick="toggleAutoRefresh()">
+                                    <i class="bi bi-play-circle"></i> Auto-refresh: OFF
+                                </button>
+                            </div>
+                            <div class="mt-3">
+                                <small class="text-muted">Auto-refresh updates every 2 seconds when enabled</small>
+                            </div>
+                        </div>
+                        <div class="col-md-4 text-end">
+                            <a href="/predict" class="btn btn-primary">
+                                <i class="bi bi-play-circle"></i> Run New Prediction
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Statistics Overview -->
+        <div class="row" id="statsRow" style="display: none;">
+            <div class="col-lg-3 col-md-6">
+                <div class="stat-box">
+                    <div class="stat-value" id="totalFeatures">8</div>
+                    <div class="stat-label">Total Features</div>
+                </div>
+            </div>
+            <div class="col-lg-3 col-md-6">
+                <div class="stat-box">
+                    <div class="stat-value" id="maxFeature">0</div>
+                    <div class="stat-label">Max Feature Value</div>
+                </div>
+            </div>
+            <div class="col-lg-3 col-md-6">
+                <div class="stat-box">
+                    <div class="stat-value" id="minFeature">0</div>
+                    <div class="stat-label">Min Feature Value</div>
+                </div>
+            </div>
+            <div class="col-lg-3 col-md-6">
+                <div class="stat-box">
+                    <div class="stat-value" id="avgFeature">0</div>
+                    <div class="stat-label">Average Value</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Features Table -->
+        <div class="row" id="featuresRow" style="display: none;">
+            <div class="col-lg-12">
+                <div class="dashboard-card">
+                    <h4 class="mb-4">
+                        <i class="bi bi-table"></i> Input Features Analysis
+                    </h4>
+                    <div class="table-responsive">
+                        <table class="table feature-table">
+                            <thead>
+                                <tr>
+                                    <th>Index</th>
+                                    <th>Feature Name</th>
+                                    <th>Category</th>
+                                    <th>Raw Value</th>
+                                    <th>Quantized (Q8.8)</th>
+                                    <th>Visualization</th>
+                                </tr>
+                            </thead>
+                            <tbody id="featuresTableBody">
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Charts Section -->
+        <div class="row" id="chartsRow" style="display: none;">
+            <div class="col-lg-6">
+                <div class="dashboard-card">
+                    <h5 class="mb-3">
+                        <i class="bi bi-bar-chart"></i> Feature Values
+                    </h5>
+                    <div class="chart-container">
+                        <canvas id="featuresChart"></canvas>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-6">
+                <div class="dashboard-card">
+                    <h5 class="mb-3">
+                        <i class="bi bi-pie-chart"></i> Feature Distribution
+                    </h5>
+                    <div class="chart-container">
+                        <canvas id="distributionChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Information Panel -->
+        <div class="row">
+            <div class="col-lg-12">
+                <div class="info-panel">
+                    <h6><i class="bi bi-info-circle"></i> Feature Categories</h6>
+                    <div class="row mt-3">
+                        <div class="col-md-6">
+                            <div class="mb-2">
+                                <span class="feature-badge badge-delta">Delta (0.5-4 Hz)</span>
+                                <span class="feature-badge badge-theta">Theta (4-8 Hz)</span>
+                                <span class="feature-badge badge-alpha">Alpha (8-13 Hz)</span>
+                                <span class="feature-badge badge-beta">Beta (13-30 Hz)</span>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-2">
+                                <span class="feature-badge badge-statistical">Statistical Features</span>
+                            </div>
+                        </div>
+                    </div>
+                    <p class="small text-muted mb-0">
+                        Features are extracted from EEG signals and quantized to Q8.8 format for FPGA processing. 
+                        The quantization multiplies values by 256 and converts to 16-bit signed integers.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        let autoRefreshInterval = null;
+        let featuresChart = null;
+        let distributionChart = null;
+        let lastUpdateTime = null;
+
+        const featureCategories = {
+            0: { name: 'Delta Power', class: 'badge-delta', color: '#3498db' },
+            1: { name: 'Theta Power', class: 'badge-theta', color: '#9b59b6' },
+            2: { name: 'Alpha Power', class: 'badge-alpha', color: '#e74c3c' },
+            3: { name: 'Beta Power', class: 'badge-beta', color: '#f39c12' },
+            4: { name: 'Statistical', class: 'badge-statistical', color: '#27ae60' },
+            5: { name: 'Statistical', class: 'badge-statistical', color: '#27ae60' },
+            6: { name: 'Statistical', class: 'badge-statistical', color: '#27ae60' },
+            7: { name: 'Statistical', class: 'badge-statistical', color: '#27ae60' }
+        };
+
+        const featureNames = [
+            "Delta Power (0.5-4 Hz)",
+            "Theta Power (4-8 Hz)", 
+            "Alpha Power (8-13 Hz)",
+            "Beta Power (13-30 Hz)",
+            "Signal Mean",
+            "Signal Variance",
+            "Signal RMS",
+            "Zero Crossing Rate"
+        ];
+
+        function quantizeQ88(value) {
+            return Math.round(value * 256);
+        }
+
+        function showLoading(show) {
+            document.getElementById('loadingOverlay').style.display = show ? 'flex' : 'none';
+        }
+
+        function updateStatistics(features) {
+            const maxVal = Math.max(...features);
+            const minVal = Math.min(...features);
+            const avgVal = features.reduce((a, b) => a + b, 0) / features.length;
+
+            document.getElementById('maxFeature').textContent = maxVal.toFixed(4);
+            document.getElementById('minFeature').textContent = minVal.toFixed(4);
+            document.getElementById('avgFeature').textContent = avgVal.toFixed(4);
+        }
+
+        function createFeatureBar(value, maxValue) {
+            const percentage = (value / maxValue) * 100;
+            return `
+                <div class="progress" style="height: 20px;">
+                    <div class="progress-bar" role="progressbar" 
+                         style="width: ${percentage}%; background: linear-gradient(45deg, #3498db, #5dade2);">
+                        ${percentage.toFixed(1)}%
+                    </div>
+                </div>
+            `;
+        }
+
+        function updateCharts(features) {
+            const ctx1 = document.getElementById('featuresChart').getContext('2d');
+            const ctx2 = document.getElementById('distributionChart').getContext('2d');
+
+            // Destroy existing charts
+            if (featuresChart) featuresChart.destroy();
+            if (distributionChart) distributionChart.destroy();
+
+            // Features bar chart
+            featuresChart = new Chart(ctx1, {
+                type: 'bar',
+                data: {
+                    labels: featureNames.map((name, i) => `F${i}`),
+                    datasets: [{
+                        label: 'Feature Values',
+                        data: features,
+                        backgroundColor: 'rgba(52, 152, 219, 0.6)',
+                        borderColor: 'rgba(52, 152, 219, 1)',
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true
+                        }
+                    }
+                }
+            });
+
+            // Distribution pie chart
+            const categoryTotals = {};
+            features.forEach((feature, index) => {
+                const category = featureCategories[index].name;
+                categoryTotals[category] = (categoryTotals[category] || 0) + feature;
+            });
+
+            distributionChart = new Chart(ctx2, {
+                type: 'doughnut',
+                data: {
+                    labels: Object.keys(categoryTotals),
+                    datasets: [{
+                        data: Object.values(categoryTotals),
+                        backgroundColor: [
+                            '#3498db', '#9b59b6', '#e74c3c', 
+                            '#f39c12', '#27ae60'
+                        ]
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false
+                }
+            });
+        }
+
+        function refreshData() {
+            showLoading(true);
+            
+            fetch('/last_features')
+                .then(response => response.json())
+                .then(data => {
+                    const features = data.features || [];
+                    const featureNames = data.feature_names || [];
+                    
+                    const statusCard = document.getElementById('statusCard');
+                    const featuresRow = document.getElementById('featuresRow');
+                    const statsRow = document.getElementById('statsRow');
+                    const chartsRow = document.getElementById('chartsRow');
+                    const timestampEl = document.getElementById('timestamp');
+                    const tbodyEl = document.getElementById('featuresTableBody');
+                    
+                    if (features.length === 0) {
+                        statusCard.className = 'status-card status-no-data';
+                        statusCard.innerHTML = `
+                            <i class="bi bi-exclamation-triangle display-4 mb-3"></i>
+                            <h4>No prediction data available</h4>
+                            <p>Run a prediction first to see the input features</p>
+                        `;
+                        featuresRow.style.display = 'none';
+                        statsRow.style.display = 'none';
+                        chartsRow.style.display = 'none';
+                        timestampEl.style.display = 'none';
+                    } else {
+                        statusCard.className = 'status-card status-has-data fade-in';
+                        statusCard.innerHTML = `
+                            <i class="bi bi-check-circle display-4 mb-3 pulse"></i>
+                            <h4>Live Data Available</h4>
+                            <p>Showing ${features.length} input features from latest prediction</p>
+                        `;
+                        
+                        lastUpdateTime = new Date();
+                        timestampEl.textContent = `Last updated: ${lastUpdateTime.toLocaleTimeString()}`;
+                        timestampEl.style.display = 'inline-block';
+                        
+                        featuresRow.style.display = 'block';
+                        statsRow.style.display = 'block';
+                        chartsRow.style.display = 'block';
+                        
+                        // Update statistics
+                        updateStatistics(features);
+                        
+                        // Populate features table
+                        tbodyEl.innerHTML = '';
+                        const maxValue = Math.max(...features.map(Math.abs));
+                        
+                        features.forEach((feature, index) => {
+                            const category = featureCategories[index];
+                            const quantized = quantizeQ88(feature);
+                            
+                            const row = tbodyEl.insertRow();
+                            row.className = 'fade-in';
+                            row.innerHTML = `
+                                <td><strong>${index}</strong></td>
+                                <td>${featureNames[index] || `Feature ${index}`}</td>
+                                <td><span class="feature-badge ${category.class}">${category.name}</span></td>
+                                <td class="feature-value">${feature.toFixed(6)}</td>
+                                <td class="quantized-value">${quantized}</td>
+                                <td>${createFeatureBar(Math.abs(feature), maxValue)}</td>
+                            `;
+                        });
+                        
+                        // Update charts
+                        updateCharts(features);
+                    }
+                })
+                .catch(error => {
+                    console.error('Error fetching features:', error);
+                    document.getElementById('statusCard').innerHTML = `
+                        <i class="bi bi-exclamation-triangle display-4 mb-3"></i>
+                        <h4>Error Loading Data</h4>
+                        <p>Please refresh the page or try again later</p>
+                    `;
+                })
+                .finally(() => {
+                    showLoading(false);
+                });
+        }
+
+        function toggleAutoRefresh() {
+            const btn = document.getElementById('autoRefreshBtn');
+            
+            if (autoRefreshInterval) {
+                clearInterval(autoRefreshInterval);
+                autoRefreshInterval = null;
+                btn.innerHTML = '<i class="bi bi-play-circle"></i> Auto-refresh: OFF';
+                btn.classList.remove('active');
+            } else {
+                autoRefreshInterval = setInterval(refreshData, 2000);
+                btn.innerHTML = '<i class="bi bi-pause-circle"></i> Auto-refresh: ON';
+                btn.classList.add('active');
+            }
+        }
+
+        // Load data on page load
+        window.onload = function() {
+            refreshData();
+        };
+
+        // Cleanup on page unload
+        window.onbeforeunload = function() {
+            if (autoRefreshInterval) {
+                clearInterval(autoRefreshInterval);
+            }
+        };
+    </script>
+</body>
+</html>

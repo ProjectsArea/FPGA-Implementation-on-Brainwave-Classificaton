@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>FPGA Sleep Stage Detection</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background-color: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        h1, h2 {
+            color: #333;
+            text-align: center;
+        }
+        .button-container {
+            text-align: center;
+            margin: 30px 0;
+        }
+        button {
+            background-color: #007bff;
+            color: white;
+            padding: 15px 30px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            margin: 0 10px;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        .result {
+            text-align: center;
+            margin: 30px 0;
+            padding: 20px;
+            border-radius: 4px;
+            font-size: 18px;
+        }
+        .result.success {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        .result.loading {
+            background-color: #cce7ff;
+            color: #004085;
+            border: 1px solid #b3d7ff;
+        }
+        .nav-link {
+            text-align: center;
+            margin: 20px 0;
+        }
+        .nav-link a {
+            color: #007bff;
+            text-decoration: none;
+            font-weight: bold;
+            padding: 10px 20px;
+            border: 2px solid #007bff;
+            border-radius: 4px;
+            transition: all 0.3s;
+        }
+        .nav-link a:hover {
+            background-color: #007bff;
+            color: white;
+        }
+        .features-preview {
+            margin: 20px 0;
+            padding: 15px;
+            background-color: #f8f9fa;
+            border-radius: 4px;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🧠 EEG-Based Sleep Stage Detection</h1>
+        <h2>FPGA Artificial Neural Network</h2>
+        
+        <div class="nav-link">
+            <a href="/simulator" target="_blank">🔬 Open Live Simulator Dashboard</a>
+        </div>
+
+        <div class="button-container">
+            <button onclick="predict()">🔮 Run Live Prediction</button>
+        </div>
+
+        <div id="result" class="result"></div>
+        
+        <div id="featuresPreview" class="features-preview"></div>
+
+        <div style="text-align: center; color: #666; margin-top: 30px;">
+            <small>Click "Run Live Prediction" to analyze EEG signals and predict sleep stage</small>
+        </div>
+    </div>
+
+    <script>
+        function predict() {
+            const resultEl = document.getElementById('result');
+            const featuresEl = document.getElementById('featuresPreview');
+            
+            resultEl.className = 'result loading';
+            resultEl.innerHTML = '🔄 Analyzing EEG signals...';
+            featuresEl.style.display = 'none';
+            
+            fetch("/predict", { method: "POST" })
+            .then(res => res.json())
+            .then(data => {
+                resultEl.className = 'result success';
+                resultEl.innerHTML = `
+                    <strong>Predicted Stage:</strong> ${data.stage_name} (ID: ${data.stage_id})
+                `;
+                
+                if (data.features && data.features.length > 0) {
+                    featuresEl.innerHTML = `
+                        <strong>Input Features (Raw Values):</strong><br>
+                        [${data.features.map(f => f.toFixed(4)).join(', ')}]
+                    `;
+                    featuresEl.style.display = 'block';
+                }
+            })
+            .catch(error => {
+                resultEl.className = 'result';
+                resultEl.innerHTML = '❌ Error: ' + error.message;
+            });
+        }
+    </script>
+</body>
+</html>
